@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="/css_Files/style.css" />
+        <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <title>ToDo List</title>
+    </head>
+    <body>
+        <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo-group">
+            <div class="logo-icon">
+                <i class="fa-solid fa-square-check"></i>
+            </div>
+            <div class="logo-text">
+                <h4>To<span id="do">Do</span></h4>
+                <p>ToDo List To Be Organized </p>
+            </div>
+            </div>
+
+            <div class="right-nav">
+            <button class="btn addBtn">
+                <i class="fa-solid fa-plus me-1"></i> New Task
+            </button>
+            <div class="nav-icon"><i class="fa-solid fa-bell"></i></div>
+            <div class="nav-icon"><i class="fa-solid fa-gear"></i></div>
+            <div class="profile">
+                <img
+                src="/images/Screenshot_20240308_204736.jpg"
+                alt="User Profile"
+                />
+            </div>
+            </div>
+        </div>
+        </nav>
+
+        <!-- Modal -->
+        <div class="model-add hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h3 id="modalTitle">Add New Task</h3>
+            <span class="exit-model"><i class="fa-solid fa-xmark"></i></span>
+            </div>
+
+            <div class="form-body">
+            <label class="label"
+                >Task Title <span class="required">*</span></label
+            >
+            <input
+                id="TaskTitleInput"
+                class="form-control"
+                type="text"
+                placeholder="To do task!!!"
+            />
+            <div class="alert text-danger hidden" id="titleAlert">
+                Please enter a task title 
+            </div>
+
+            <label class="label">Category</label>
+            <select id="CategoryInput" class="form-control">
+                <option value="" selected disabled hidden>Select category</option>
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Study">Study</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <label class="label">Date</label>
+            <input id="DueDateInput" class="form-control" type="datetime-local" />
+
+            <label class="label">Details</label>
+            <textarea
+                class="form-control"
+                id="NotesInput"
+                rows="3"
+                placeholder="Task details..."
+            ></textarea>
+
+            <div class="checkbox-group">
+                <label for="favInput" class="checkbox-label">
+                <input type="checkbox" id="favInput" />
+                <span class="text-warning"><i class="fa-solid fa-star"></i> Important</span
+                >
+                </label>
+
+                <label for="completedInput" class="checkbox-label">
+                <input type="checkbox" id="completedInput" />
+                <span class="text-success"
+                    ><i class="fa-solid fa-circle-check"></i> Completed</span
+                >
+                </label>
+            </div>
+
+            <div class="modal-buttons">
+                <button type="button" class="btn cancelModel">Cancel</button>
+                <button type="button" class="btn saveModel">
+                <i class="fa-solid fa-check"></i> Save Task
+                </button>
+                <button type="button" class="btn updateBtn hidden savemodel">
+                <i class="fa-solid fa-rotate"></i> Update Task
+                </button>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        
+        <section class="sec-banner container">
+        <div class="banner-card">
+            <div class="banner-text">
+            <h2>Productivity Overview</h2>
+            <p id="progress-text">You completed 0 of 0 tasks</p>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+        </section>
+
+        
+        <main class="main-content">
+
+            <div class="container layout-grid">
+                <section class="board-section">
+                <div class="search-wrapper">
+                    <input
+                    id="serachInput"
+                    oninput="searchTask()"
+                    type="search"
+                    class="search-input"
+                    placeholder="Search tasks by title, category, or notes..."
+                    />
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                </div>
+
+                <div class="kanban-board">
+                    
+                    <div class="kanban-column">
+                    <div class="column-header todo-head">
+                        <span><i class="fa-solid fa-list-ul"></i>  Task</span>
+                        <span class="column-count" id="todo-count">0</span>
+                    </div>
+                    <div id="todo-list" class="kanban-cards"></div>
+                    </div>
+
+                    
+                    <div class="kanban-column">
+                    <div class="column-header important-head">
+                        <span
+                        ><i class="fa-solid fa-star text-warning"></i> Important</span
+                        >
+                        <span class="column-count" id="important-count">0</span>
+                    </div>
+                    <div id="important-list" class="kanban-cards"></div>
+                    </div>
+
+                    
+                    <div class="kanban-column">
+                    <div class="column-header completed-head">
+                        <span
+                        ><i class="fa-solid fa-circle-check text-success"></i> Completed</span
+                        >
+                        <span class="column-count" id="done-count">0</span>
+                    </div>
+                    <div id="done-list" class="kanban-cards"></div>
+                    </div>
+                </div>
+                </section>
+                
+                <aside class="sidebar">
+                <div class="widget-box">
+                    <div class="widget-header">
+                    <h4><i class="fa-solid fa-chart-pie"></i> Categories</h4>
+                    </div>
+                    <div id="category-summary" class="widget-body">
+                    
+                    </div>
+                </div>
+                </aside>
+            </div>
+
+        </main>
+
+        <!-- Link A js File -->
+        <script src="/js_Files/main.js"></script>
+    </body>
+</html>
