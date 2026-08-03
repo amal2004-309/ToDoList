@@ -1,4 +1,4 @@
-
+/* Selectors */
 var addBtn = document.querySelector('.addBtn');
 var modelAdd = document.querySelector('.model-add');
 var exitModel = document.querySelector('.exit-model');
@@ -17,11 +17,12 @@ var tasksList = [];
 var selectedTaskIndex = null;
 var storageKey = 'taskHubData_pure';
 
-const DarkSwal = Swal.mixin({
+//SweetAlert
+const AppSwal = Swal.mixin({
     customClass: { popup: 'custom-swal-popup' }
 });
 
-// --- Modal
+
 addBtn.addEventListener('click', openModalForAdd);
 exitModel.addEventListener('click', closeModal);
 cancelButton.addEventListener('click', closeModal);
@@ -32,6 +33,7 @@ function openModalForAdd() {
     updateBtn.classList.add('hidden');
     document.getElementById('modalTitle').innerText = 'Add New Task';
     clearInputs();
+    setMinDateTime();
 }
 
 function closeModal() {
@@ -40,6 +42,40 @@ function closeModal() {
 }
 
 
+function getCurrentDateTimeFormatted() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function setMinDateTime() {
+    if (dueDateInput) {
+        const currentNow = getCurrentDateTimeFormatted();
+        dueDateInput.min = currentNow;
+    }
+}
+
+if (dueDateInput) {
+    dueDateInput.addEventListener('change', function () {
+        const currentNow = getCurrentDateTimeFormatted();
+        if (this.value && this.value < currentNow) {
+            AppSwal.fire({
+                title: "Invalid Time!",
+                text: "You cannot select a past date or time.",
+                icon: "warning",
+                timer: 2000,
+                showConfirmButton: false
+            });
+            this.value = currentNow;
+        }
+    });
+}
+
+// LocalStorage 
 if (localStorage.getItem(storageKey) !== null) {
     tasksList = JSON.parse(localStorage.getItem(storageKey));
     displayBoard(tasksList);
@@ -48,7 +84,7 @@ if (localStorage.getItem(storageKey) !== null) {
     displayBoard(tasksList);
 }
 
-
+// SaveTask
 saveButton.addEventListener('click', function (e) {
     e.preventDefault();
     if (!validateTitle()) return;
@@ -63,12 +99,11 @@ saveButton.addEventListener('click', function (e) {
         isCompleted: completedInput.checked
     };
 
-
     tasksList.push(task);
     saveAndRefresh();
     closeModal();
 
-    DarkSwal.fire({ title: "Added!", text: "Task created successfully", icon: "success", timer: 1200, showConfirmButton: false });
+    AppSwal.fire({ title: "Added!", text: "Task created successfully", icon: "success", timer: 1200, showConfirmButton: false });
 });
 
 function displayBoard(list) {
@@ -97,6 +132,16 @@ function displayBoard(list) {
         }
     });
 
+    if (todoCount === 0) {
+        todoContainer.innerHTML = getEmptyStateHTML('fa-clipboard-list', 'No pending tasks');
+    }
+    if (impCount === 0) {
+        importantContainer.innerHTML = getEmptyStateHTML('fa-star', 'No important tasks');
+    }
+    if (doneCount === 0) {
+        doneContainer.innerHTML = getEmptyStateHTML('fa-circle-check', 'No completed tasks yet');
+    }
+
     document.getElementById('todo-count').innerText = todoCount;
     document.getElementById('important-count').innerText = impCount;
     document.getElementById('done-count').innerText = doneCount;
@@ -104,12 +149,24 @@ function displayBoard(list) {
     updateStatsAndProgress();
 }
 
+function getEmptyStateHTML(iconClass, message) {
+    return `
+        <div class="empty-state">
+            <i class="fa-solid ${iconClass}"></i>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
 function createCardHTML(task, index) {
     var checkIcon = task.isCompleted ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle';
     var starIcon = task.isImportant ? 'fa-solid fa-star text-warning' : 'fa-regular fa-star';
+    
+    
+    var completedClass = task.isCompleted ? 'completed-card' : '';
 
     return `
-        <div class="task-card">
+        <div class="task-card ${completedClass}">
             <div>
                 <div class="task-card-top">
                     <span class="cat-tag">${escapeHtml(task.category)}</span>
@@ -136,6 +193,7 @@ function setupEdit(index) {
     selectedTaskIndex = index;
     var task = tasksList[index];
 
+    setMinDateTime();
     taskTitleInput.value = task.title;
     categoryInput.value = task.category;
     dueDateInput.value = task.dueDate !== 'No date' ? task.dueDate : '';
@@ -162,11 +220,11 @@ updateBtn.addEventListener('click', function () {
     saveAndRefresh();
     closeModal();
 
-    DarkSwal.fire({ title: "Updated!", text: "Task details updated", icon: "success", timer: 1200, showConfirmButton: false });
+    AppSwal.fire({ title: "Updated!", text: "Task details updated", icon: "success", timer: 1200, showConfirmButton: false });
 });
 
 function deleteTask(index) {
-    DarkSwal.fire({
+    AppSwal.fire({
         title: "Delete Task?",
         text: "Are you sure you want to delete this?",
         icon: "warning",
@@ -177,7 +235,7 @@ function deleteTask(index) {
         if (result.isConfirmed) {
             tasksList.splice(index, 1);
             saveAndRefresh();
-            DarkSwal.fire({ title: "Deleted!", text: "Task details Deleted", icon: "success", timer: 1200, showConfirmButton: false });
+            AppSwal.fire({ title: "Deleted!", text: "Task details Deleted", icon: "success", timer: 1200, showConfirmButton: false });
         }
     });
 }
@@ -186,7 +244,6 @@ function toggleComplete(index) {
     tasksList[index].isCompleted = !tasksList[index].isCompleted;
     saveAndRefresh();
 }
-
 
 function toggleImportant(index) {
     tasksList[index].isImportant = !tasksList[index].isImportant;
@@ -202,7 +259,6 @@ function searchTask() {
     );
     displayBoard(filtered);
 }
-
 
 function updateStatsAndProgress() {
     var total = tasksList.length;
@@ -257,3 +313,33 @@ function validateTitle() {
 function escapeHtml(str) {
     return str ? str.replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]; }) : '';
 }
+
+
+/* Theme Mode */
+
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const themeIcon = document.getElementById('themeIcon');
+
+const savedTheme = localStorage.getItem('theme');
+
+if (savedTheme === 'light') {
+    document.body.classList.add('light-theme');
+    themeIcon.classList.replace('fa-sun', 'fa-moon');
+} else {
+    document.body.classList.remove('light-theme');
+    themeIcon.classList.replace('fa-moon', 'fa-sun');
+}
+
+themeToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('light-theme');
+    
+    const isLight = document.body.classList.contains('light-theme');
+    
+    if (isLight) {
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+        localStorage.setItem('theme', 'light');
+    } else {
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+        localStorage.setItem('theme', 'dark');
+    }
+});
